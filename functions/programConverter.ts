@@ -130,79 +130,80 @@ class ProgramConverter {
     valueToUI = (value: Value, selector: Array<string | number>): LineContents => {
         const codeValue: LineContents = []
 
-        if (typeof value !== "object") {
-            switch (typeof value) {
+        if ("type" in value) {
+            switch (value.type) {
                 case "string":
-                    codeValue.push({ selector, type: "string", value: value })
+                    codeValue.push({ selector: [...selector, "value"], type: "string", value: value.value })
                     break;
                 case "number":
-                    codeValue.push({ selector, type: "number", value: value.toString() })
+                    codeValue.push({ selector: [...selector, "value"], type: "number", value: value.value })
                     break;
                 case "boolean":
-                    codeValue.push({ selector, type: "boolean-select", value })
+                    codeValue.push({ selector: [...selector, "value"], type: "boolean-select", value: value.value })
                     break;
             }
-        } else {
-            switch (value.operation) {
-                case "function":
-                    codeValue.push(
-                        {
-                            selector: [...selector, "id"],
-                            type: "function-select",
-                            value: value.id,
-                            children: this.valueToUI(value.arg, [...selector, "arg"]),
-                            choices: this.functions,
-                        }
-                    )
-                    break;
-                case "equal":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "=="))
-                    break;
-                case "add":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "+"))
-                    break;
-                case "subtract":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "-"))
-                    break;
-                case "multiply":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "*"))
-                    break;
-                case "divide":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "/"))
-                    break;
-                case "and":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "and"))
-                    break;
-                case "or":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "or"))
-                    break;
-                case "bigger":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">"))
-                    break;
-                case "smaller":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<"))
-                    break;
-                case "not-equal":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "!="))
-                    break;
-                case "bigger-equal":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">="))
-                    break;
-                case "smaller-equal":
-                    codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<="))
-                    break;
-                case "variable":
-                    codeValue.push(
-                        {
-                            selector: [...selector, "id"],
-                            type: "variable-select",
-                            choices: { ...this.variables },
-                            value: value.id,
-                        }
-                    )
-                    break;
+            return codeValue;
+        }
 
-            }
+        switch (value.operation) {
+            case "function":
+                codeValue.push(
+                    {
+                        selector: [...selector, "id"],
+                        type: "function-select",
+                        value: value.id,
+                        children: this.valueToUI(value.arg, [...selector, "arg"]),
+                        choices: this.functions,
+                    }
+                )
+                break;
+            case "equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "=="))
+                break;
+            case "add":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "+"))
+                break;
+            case "subtract":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "-"))
+                break;
+            case "multiply":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "*"))
+                break;
+            case "divide":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "/"))
+                break;
+            case "and":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "and"))
+                break;
+            case "or":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "or"))
+                break;
+            case "bigger":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">"))
+                break;
+            case "smaller":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<"))
+                break;
+            case "not-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "!="))
+                break;
+            case "bigger-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">="))
+                break;
+            case "smaller-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<="))
+                break;
+            case "variable":
+                codeValue.push(
+                    {
+                        selector: [...selector, "id"],
+                        type: "variable-select",
+                        choices: { ...this.variables },
+                        value: value.id,
+                    }
+                )
+                break;
+
         }
 
         return codeValue;

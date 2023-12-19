@@ -15,23 +15,23 @@ export type NestInfo = {
     elifId: string;
 }
 
-export type BaseBlockElem<T extends string, V> = {
+export type BaseBlockElem<T extends string> = {
     type: T;
     selector: Array<string | number>;
-    value: V
+    value: string
 }
-export type BaseSelectBlockElem<T extends string, V> = BaseBlockElem<T, V> & {
+export type BaseSelectBlockElem<T extends string> = BaseBlockElem<T> & {
     choices: { [id: string]: string }
 }
 
 export type WriteBlockElem = (
-    BaseBlockElem<"variable", string> |
-    BaseBlockElem<"number" | "string", string>
+    BaseBlockElem<"variable"> |
+    BaseBlockElem<"number" | "string">
 )
 export type SelectBlockElem = (
-    BaseSelectBlockElem<"variable-select", string> |
-    BaseSelectBlockElem<"function-select", string> & { children?: Array<BlockElem | TextElem> } |
-    Omit<BaseSelectBlockElem<"boolean-select", boolean>, "choices">
+    BaseSelectBlockElem<"variable-select"> |
+    BaseSelectBlockElem<"function-select"> & { children?: Array<BlockElem | TextElem> } |
+    Omit<BaseSelectBlockElem<"boolean-select">, "choices">
 )
 
 export type BlockElem = WriteBlockElem | SelectBlockElem;

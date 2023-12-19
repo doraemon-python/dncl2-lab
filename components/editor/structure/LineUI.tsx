@@ -33,33 +33,14 @@ const LineUI = ({ lineContents, program, setProgram }: Props) => {
     }
   }
 
-  const createSetVariable = (selector: Array<string | number>) => {
-    return (value: string) => {
-      createSetBySelector(selector)(value);
-    }
-  }
-
-  const createSetNumber = (selector: Array<string | number>) => {
-    return (value: string) => {
-      const number = Number(value);
-      createSetBySelector(selector)(Number.isNaN(number) ? value : number);
-    }
-  }
-
-  const createSetBoolean = (selector: Array<string | number>) => {
-    return (value: string) => {
-      createSetBySelector(selector)(Boolean(value));
-    }
-  }
-
   return (
     <>
       {lineContents.map((elem, index) => {
         switch (elem.type) {
           case "variable":
-            return <VariableBlock key={index} value={elem.value} setValue={createSetVariable(elem.selector)} />
+            return <VariableBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "number":
-            return <NumberBlock key={index} value={elem.value} setValue={createSetNumber(elem.selector)} />
+            return <NumberBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "string":
             return <StringBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "variable-select":
@@ -71,7 +52,7 @@ const LineUI = ({ lineContents, program, setProgram }: Props) => {
               </FunctionSelectBlock>
             )
           case "boolean-select":
-            return <BooleanSelectBlock key={index} value={elem.value} setValue={createSetBoolean(elem.selector)} />
+            return <BooleanSelectBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "plain":
             return <p key={index}>{elem.value}</p>
           case "reserved":

@@ -1,7 +1,7 @@
 import BaseSelectBlock from "./BaseSelectBlock";
 
 type Props = {
-  value: boolean;
+  value: string;
   setValue: (value: string) => void;
 }
 
@@ -9,8 +9,8 @@ const BooleanSelectBlock = ({ value, setValue }: Props) => {
   return (
     <BaseSelectBlock
       className="text-boolean bg-boolean/10"
-      choices={{ "false": "false", "true": "true" }}
-      value={value ? "true" : "false"}
+      choices={{ "false": "False", "true": "True" }}
+      value={value}
       setValue={setValue}
     />
   );

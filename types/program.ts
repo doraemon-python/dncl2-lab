@@ -63,7 +63,10 @@ export type WhileLine = {
 }
 
 // Valueの定義
-export type RawValue = string | number | boolean;
+export type NormalValue = {
+    type: "string" | "number" | "boolean",
+    value: string
+};
 export type CalculatedValue = {
     operation: ArithmeticOperation,
     values: [Value, Value]
@@ -79,7 +82,7 @@ export type CalculatedValue = {
     arg: Value,
 };
 
-export type Value = RawValue | CalculatedValue;
+export type Value = NormalValue | CalculatedValue;
 
 
 // Operationの定義

@@ -1,4 +1,6 @@
-import { DNCL2Program, Value, RawValue, ArithmeticOperation, LogicalOperation, ProgramResult } from "@/types/program";
+import { DNCL2Program, Value, NormalValue, ArithmeticOperation, LogicalOperation, ProgramResult } from "@/types/program";
+
+type RawValue = string | number | boolean;
 
 class ProgramRunner {
     variables: { [id: string]: { name: string, value: RawValue } };
@@ -83,7 +85,20 @@ class ProgramRunner {
     }
 
     getRawValue = (value: Value): RawValue => {
-        if (typeof value !== "object") { return value; }
+        if ("type" in value) {
+            switch (value.type) {
+                case "string":
+                    return value.value;
+                case "number":
+                    const number = Number(value.value);
+                    if (isNaN(number)) {
+                        throw new Error("数値に変換できません。");
+                    }
+                    return number;
+                case "boolean":
+                    return value.value === "true";
+            }
+        }
 
         if (value.operation === "variable") {
             if (!this.variables[value.id]) {
@@ -97,19 +112,19 @@ class ProgramRunner {
             return this.functions[value.id].action(this.getRawValue(value.arg));
         }
 
-        const value1 = this.getRawValue(value.values[0]) as any;
-        const value2 = this.getRawValue(value.values[1]) as any;
+        const value1 = this.getRawValue(value.values[0]);
+        const value2 = this.getRawValue(value.values[1]);
         checkType(value1, value2, value.operation);
 
         switch (value.operation) {
             case "add":
-                return value1 + value2;
+                return (value1 as any) + (value2 as any);
             case "subtract":
-                return value1 - value2;
+                return (value1 as number) - (value2 as number);
             case "multiply":
-                return value1 * value2;
+                return (value1 as number) * (value2 as number);
             case "divide":
-                return value1 / value2;
+                return (value1 as number) / (value2 as number);
             case "and":
                 return value1 && value2;
             case "or":
@@ -160,7 +175,7 @@ class ProgramRunner {
 
 export default ProgramRunner;
 
-const checkType = (value1: any, value2: any, operation: ArithmeticOperation | LogicalOperation): void => {
+const checkType = (value1: RawValue, value2: RawValue, operation: ArithmeticOperation | LogicalOperation): void => {
     switch (operation) {
         case "add":
             if (typeof value1 !== typeof value2) {
