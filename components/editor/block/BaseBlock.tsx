@@ -1,7 +1,7 @@
 type Props = {
   className: string;
   value: string;
-  setValue?: (value: string) => void;
+  setValue: (value: string) => void;
   inputMode?: "decimal" | "text";
   wrapText?: boolean;
 }
@@ -11,9 +11,7 @@ const BaseBlock = ({ className, value, setValue, inputMode, wrapText }: Props) =
   const end = wrapText ? `"` : "";
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (setValue) {
-      setValue(e.target.value);
-    }
+    setValue(e.target.value);
   }
 
   return (

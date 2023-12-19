@@ -1,4 +1,4 @@
-import { ProgramLine, NormalLine, AssignVariableLine } from "@/types/program";
+import { ProgramLine } from "@/types/program";
 import { LineContents } from "@/types/code";
 import {
   VariableBlock,
@@ -12,11 +12,11 @@ import { ReservedText } from "@/components/editor/text";
 
 type Props = {
   lineContents: LineContents;
-  programLine: NormalLine;
-  setProgramLine: (programLine: NormalLine) => void;
+  program: ProgramLine[];
+  setProgram: (program: ProgramLine[]) => void;
 }
 
-const LineElems = ({ lineContents, programLine, setProgramLine }: Props) => {
+const LineUI = ({ lineContents, program, setProgram }: Props) => {
   const updateObj = (arr: any, key: Array<string | number>, value: any) => {
     if (key.length === 1) {
       arr[key[0]] = value;
@@ -25,28 +25,11 @@ const LineElems = ({ lineContents, programLine, setProgramLine }: Props) => {
     updateObj(arr[key[0]], key.slice(1), value);
   }
 
-  const setValiableName = (value: string) => {
-    setProgramLine({ ...programLine as AssignVariableLine, target: { name: value, id: (programLine as AssignVariableLine).target.id } })
-  }
-
   const createSetBySelector = (selector: Array<string | number>) => {
     return (value: any) => {
-      const newProgramLine = { ...programLine };
-      updateObj(newProgramLine, selector, value);
-      setProgramLine(newProgramLine);
-    }
-  }
-
-  const createSetNumber = (selector: Array<string | number>) => {
-    return (value: string) => {
-      const number = Number(value);
-      createSetBySelector(selector)(Number.isNaN(number) ? value : number);
-    }
-  }
-
-  const createSetBoolean = (selector: Array<string | number>) => {
-    return (value: string) => {
-      createSetBySelector(selector)(Boolean(value));
+      const newProgram = [...program];
+      updateObj(newProgram, selector, value);
+      setProgram(newProgram);
     }
   }
 
@@ -55,9 +38,9 @@ const LineElems = ({ lineContents, programLine, setProgramLine }: Props) => {
       {lineContents.map((elem, index) => {
         switch (elem.type) {
           case "variable":
-            return <VariableBlock key={index} value={elem.value} setValue={setValiableName} />
+            return <VariableBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "number":
-            return <NumberBlock key={index} value={elem.value} setValue={createSetNumber(elem.selector)} />
+            return <NumberBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "string":
             return <StringBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "variable-select":
@@ -65,11 +48,11 @@ const LineElems = ({ lineContents, programLine, setProgramLine }: Props) => {
           case "function-select":
             return (
               <FunctionSelectBlock choices={elem.choices} key={index} value={elem.value} setValue={createSetBySelector(elem.selector)}>
-                {elem.children && <LineElems lineContents={elem.children} programLine={programLine} setProgramLine={setProgramLine} />}
+                {elem.children && <LineUI lineContents={elem.children} program={program} setProgram={setProgram} />}
               </FunctionSelectBlock>
             )
           case "boolean-select":
-            return <BooleanSelectBlock key={index} value={elem.value} setValue={createSetBoolean(elem.selector)} />
+            return <BooleanSelectBlock key={index} value={elem.value} setValue={createSetBySelector(elem.selector)} />
           case "plain":
             return <p key={index}>{elem.value}</p>
           case "reserved":
@@ -80,4 +63,4 @@ const LineElems = ({ lineContents, programLine, setProgramLine }: Props) => {
   );
 }
 
-export default LineElems;
+export default LineUI;

@@ -1,32 +1,32 @@
-import { Program, Value } from "@/types/program"
-import { Code, CodeLine, LineContents, BlockElem, TextElem } from "@/types/code"
+import { DNCL2Program, Value } from "@/types/program"
+import { Code, LineContents, BlockElem, TextElem } from "@/types/code"
 
 class ProgramConverter {
-    variables: { [id: string]: { name: string } };
-    functions: { [id: string]: { name: string, action: (...arg: any[]) => any } };
+    variables: { [id: string]: string };
+    functions: { [id: string]: string };
 
     constructor() {
         this.variables = {};
         this.functions = {
-            show: { name: "表示する", action: (arg: any) => { console.log(arg) } },
-            int: { name: "切り捨て", action: (arg: number) => Math.floor(arg) },
-            str: { name: "文字", action: (arg: any) => String(arg) },
+            show: "表示する",
+            int: "切り捨て",
+            str: "文字",
         }
     }
 
-    convert(program: Program): Code {
+    convert(program: DNCL2Program, selector: Array<string | number> = []): Code {
         const code: Code = []
 
-        program.map(programLine => {
+        program.map((programLine, index) => {
             switch (programLine.type) {
                 case "assign-variable":
-                    this.variables[programLine.target.id] = { name: programLine.target.name }
+                    this.variables[programLine.target.id] = programLine.target.name
                     code.push({
                         lineId: programLine.lineId,
                         contents: [
-                            { type: "variable", value: programLine.target.name },
+                            { type: "variable", value: programLine.target.name, selector: [...selector, index, "target", "name"] },
                             { type: "plain", value: "=" },
-                            ...this.valueToCodeElems(programLine.value, ["value"]),
+                            ...this.valueToUI(programLine.value, [...selector, index, "value"]),
                         ]
                     })
                     break;
@@ -35,13 +35,13 @@ class ProgramConverter {
                         lineId: programLine.lineId,
                         contents: [
                             {
-                                selector: ["target", "id"],
+                                selector: [...selector, index, "target", "id"],
                                 type: "variable-select",
                                 choices: { ...this.variables },
                                 value: programLine.target.id,
                             },
                             { type: "plain", value: "=" },
-                            ...this.valueToCodeElems(programLine.value, ["value"]),
+                            ...this.valueToUI(programLine.value, [...selector, index, "value"]),
                         ]
                     })
                     break;
@@ -50,11 +50,11 @@ class ProgramConverter {
                         lineId: programLine.lineId,
                         contents: [
                             {
-                                selector: ["target", "id"],
+                                selector: [...selector, index, "id"],
                                 type: "function-select",
                                 choices: this.functions,
-                                value: programLine.target.id,
-                                children: this.valueToCodeElems(programLine.value, ["value"]),
+                                value: programLine.id,
+                                children: programLine.arg === undefined ? undefined : this.valueToUI(programLine.arg, [...selector, index, "arg"]),
                             },
                         ]
                     })
@@ -69,42 +69,42 @@ class ProgramConverter {
                     break;
                 case "branch":
                     code.push({
-                        lineId: programLine.lineId,
+                        lineId: programLine.if.ifId,
                         contents: [
                             { type: "reserved", value: "もし" },
-                            ...this.valueToCodeElems(programLine.if.condition, ["if", "condition"]),
+                            ...this.valueToUI(programLine.if.condition, [...selector, index, "if", "condition"]),
                             { type: "reserved", value: "なら" },
                         ],
                         nest: {
                             info: { why: "if" },
-                            lines: this.convert(programLine.if.lines),
+                            lines: this.convert(programLine.if.lines, [...selector, index, "if", "lines"]),
                         }
                     })
                     if (programLine.elif) {
-                        programLine.elif.forEach((elifLine, index) => {
+                        programLine.elif.forEach((elifLine, _index) => {
                             code.push({
-                                lineId: programLine.lineId,
+                                lineId: elifLine.elifId,
                                 contents: [
                                     { type: "reserved", value: "そうでなくもし" },
-                                    ...this.valueToCodeElems(elifLine.condition, ["elif", index, "condition"]),
+                                    ...this.valueToUI(elifLine.condition, [...selector, index, "elif", _index, "condition"]),
                                     { type: "reserved", value: "なら" },
                                 ],
                                 nest: {
                                     info: { why: "elif", elifId: elifLine.elifId },
-                                    lines: this.convert(elifLine.lines),
+                                    lines: this.convert(elifLine.lines, [...selector, index, "elif", _index, "lines"]),
                                 }
                             })
                         })
                     }
                     if (programLine.else) {
                         code.push({
-                            lineId: programLine.lineId,
+                            lineId: programLine.else.elseId,
                             contents: [
                                 { type: "reserved", value: "そうでなければ" },
                             ],
                             nest: {
                                 info: { why: "else" },
-                                lines: this.convert(programLine.else.lines),
+                                lines: this.convert(programLine.else.lines, [...selector, index, "else", "lines"]),
                             }
                         })
                     }
@@ -113,12 +113,12 @@ class ProgramConverter {
                     code.push({
                         lineId: programLine.lineId,
                         contents: [
-                            ...this.valueToCodeElems(programLine.condition, ["condition"]),
+                            ...this.valueToUI(programLine.condition, [...selector, index, "condition"]),
                             { type: "reserved", value: "の間繰り返す" },
                         ],
                         nest: {
                             info: { why: "while" },
-                            lines: this.convert(programLine.lines),
+                            lines: this.convert(programLine.lines, [...selector, index, "lines"]),
                         }
                     })
             }
@@ -127,94 +127,95 @@ class ProgramConverter {
         return code;
     }
 
-    valueToCodeElems = (value: Value, selector: Array<string | number>): LineContents => {
+    valueToUI = (value: Value, selector: Array<string | number>): LineContents => {
         const codeValue: LineContents = []
 
-        if (typeof value !== "object") {
-            switch (typeof value) {
+        if ("type" in value) {
+            switch (value.type) {
                 case "string":
-                    codeValue.push({ selector, type: "string", value: value })
+                    codeValue.push({ selector: [...selector, "value"], type: "string", value: value.value })
                     break;
                 case "number":
-                    codeValue.push({ selector, type: "number", value: value.toString() })
+                    codeValue.push({ selector: [...selector, "value"], type: "number", value: value.value })
                     break;
                 case "boolean":
-                    codeValue.push({ selector, type: "boolean-select", value })
+                    codeValue.push({ selector: [...selector, "value"], type: "boolean-select", value: value.value })
                     break;
             }
-        } else {
-            switch (value.operation) {
-                case "function":
-                    codeValue.push(
-                        {
-                            selector: [...selector, "functionId"],
-                            type: "function-select",
-                            choices: this.functions,
-                            children: this.valueToCodeElems(value.argValue, [...selector, "argValue"]),
-                            value: value.functionId,
-                        }
-                    )
-                    break;
-                case "equal":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "=="))
-                    break;
-                case "add":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "+"))
-                    break;
-                case "subtract":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "-"))
-                    break;
-                case "multiply":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "*"))
-                    break;
-                case "divide":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "/"))
-                    break;
-                case "and":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "and"))
-                    break;
-                case "or":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "or"))
-                    break;
-                case "bigger":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], ">"))
-                    break;
-                case "smaller":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "<"))
-                    break;
-                case "not-equal":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "!="))
-                    break;
-                case "bigger-equal":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], ">="))
-                    break;
-                case "smaller-equal":
-                    codeValue.push(...this.codeElemsWithOperator(value.values, [...selector, "values"], "<="))
-                    break;
-                case "variable":
-                    codeValue.push(
-                        {
-                            selector: [...selector, "id"],
-                            type: "variable-select",
-                            choices: { ...this.variables },
-                            value: value.id,
-                        }
-                    )
-                    break;
+            return codeValue;
+        }
 
-            }
+        switch (value.operation) {
+            case "function":
+                codeValue.push(
+                    {
+                        selector: [...selector, "id"],
+                        type: "function-select",
+                        value: value.id,
+                        children: this.valueToUI(value.arg, [...selector, "arg"]),
+                        choices: this.functions,
+                    }
+                )
+                break;
+            case "equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "=="))
+                break;
+            case "add":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "+"))
+                break;
+            case "subtract":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "-"))
+                break;
+            case "multiply":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "*"))
+                break;
+            case "divide":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "/"))
+                break;
+            case "and":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "and"))
+                break;
+            case "or":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "or"))
+                break;
+            case "bigger":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">"))
+                break;
+            case "smaller":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<"))
+                break;
+            case "not-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "!="))
+                break;
+            case "bigger-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], ">="))
+                break;
+            case "smaller-equal":
+                codeValue.push(...this.valuesToUIWithOperator(value.values, [...selector, "values"], "<="))
+                break;
+            case "variable":
+                codeValue.push(
+                    {
+                        selector: [...selector, "id"],
+                        type: "variable-select",
+                        choices: { ...this.variables },
+                        value: value.id,
+                    }
+                )
+                break;
+
         }
 
         return codeValue;
     }
 
-    codeElemsWithOperator = (values: [Value, Value], selector: Array<string | number>, operation: string): Array<BlockElem | TextElem> => {
+    valuesToUIWithOperator = (values: [Value, Value], selector: Array<string | number>, operation: string): Array<BlockElem | TextElem> => {
         const [value1, value2] = values;
 
         return [
-            ...this.valueToCodeElems(value1, [...selector, 0]),
+            ...this.valueToUI(value1, [...selector, 0]),
             { type: "plain", value: operation },
-            ...this.valueToCodeElems(value2, [...selector, 1]),
+            ...this.valueToUI(value2, [...selector, 1]),
         ]
     }
 }

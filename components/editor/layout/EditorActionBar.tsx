@@ -1,37 +1,30 @@
 "use client";
 
 import { useState } from "react";
-import { Program } from "@/types/program";
+import { DNCL2Program, ProgramResult } from "@/types/program";
 import ProgramRunner from "@/functions/programRanner";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 
 type Props = {
-  program: Program
+  program: DNCL2Program
 }
 
-type Result = Array<{
-  index: number,
-  text: string,
-  isError: boolean,
-}>
-
-
 const EditorActionBar = ({ program }: Props) => {
-  const [result, setResult] = useState<Result>([]);
+  const [result, setResult] = useState<ProgramResult>([]);
   const [running, setRunning] = useState(false);
 
   const runCode = () => {
     setRunning(true);
     const runner = new ProgramRunner();
-    const error = [];
+    const error: ProgramResult = [];
     try {
       runner.run(program);
     } catch (e: any) {
       error.push({
         index: runner.runningIndex,
         text: e.message,
-        isError: true,
+        type: "error"
       });
     } finally {
       setResult([...runner.result, ...error]);
@@ -78,9 +71,9 @@ const EditorActionBar = ({ program }: Props) => {
             <div className="p-4 flex flex-col gap-4 bg-2 rounded-3xl shadow-xl">
               <h1 className="pb-2 text-xl font-bold text-center border-b">実行結果</h1>
               {result.map((r, i) => (
-                <div key={i} className={r.isError ? "text-danger" : ""}>
-                  <p className="mb-1">{`${r.index + 1}行目での${r.isError ? "エラー" : "出力"}`}</p>
-                  <p className={`${r.isError ? "bg-danger/10" : "bg-3"} p-2 rounded-md`}>{r.text}</p>
+                <div key={i} className={r.type === "error" ? "text-danger" : ""}>
+                  <p className="mb-1">{`${r.index + 1}行目での${r.type === "error" ? "エラー" : "出力"}`}</p>
+                  <p className={`${r.type === "error" ? "bg-danger/10" : "bg-3"} p-2 rounded-md`}>{r.text}</p>
                 </div>
               ))}
               <button onClick={close} className="w-fit mx-auto px-2 py-1 bg-main text-white rounded-md">閉じる</button>
