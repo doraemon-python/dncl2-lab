@@ -19,7 +19,7 @@ class ProgramRunner {
         this.idList = [];
     }
 
-    run(program: DNCL2Program, isNested: boolean = false) {
+    run(program: DNCL2Program, isNested: boolean = false): "break" | undefined {
         if (!isNested) {
             this.idList = this.createIdList(program);
         }
@@ -43,40 +43,34 @@ class ProgramRunner {
                     }
                     break;
                 case "branch":
+                    let isFinished = false;
                     this.runningIndex = this.idList.indexOf(line.if.ifId);
                     if (this.getRawValue(line.if.condition)) {
+                        isFinished = true;
                         const res = this.run(line.if.lines, true);
                         if (res === "break") { return "break"; }
-                    } else {
-                        let runElse = !line.elif;
-
-                        if (line.elif) {
-                            runElse = true;
-                            for (const elif of line.elif) {
-                                this.runningIndex = this.idList.indexOf(elif.elifId);
-                                if (this.getRawValue(elif.condition)) {
-                                    runElse = false;
-                                    const res = this.run(elif.lines, true);
-                                    if (res === "break") { return "break"; }
-                                }
-                            }
-                        }
-                        if (line.else) {
-                            if (runElse) {
-                                this.runningIndex = this.idList.indexOf(line.else.elseId);
-                                const res = this.run(line.else.lines, true);
+                    }
+                    if (!isFinished && line.elif) {
+                        for (const elif of line.elif) {
+                            this.runningIndex = this.idList.indexOf(elif.elifId);
+                            if (this.getRawValue(elif.condition)) {
+                                isFinished = true;
+                                const res = this.run(elif.lines, true);
                                 if (res === "break") { return "break"; }
                             }
                         }
+                    }
+                    if (!isFinished && line.else) {
+                        this.runningIndex = this.idList.indexOf(line.else.elseId);
+                        const res = this.run(line.else.lines, true);
+                        if (res === "break") { return "break"; }
                     }
                     break;
                 case "while":
                     this.runningIndex = this.idList.indexOf(line.lineId);
                     while (this.getRawValue(line.condition)) {
                         const whileReturn = this.run(line.lines, true);
-                        if (whileReturn === "break") {
-                            break;
-                        }
+                        if (whileReturn === "break") { break; }
                     }
                     break;
                 case "break":
@@ -84,6 +78,8 @@ class ProgramRunner {
                     return "break";
             }
         }
+
+        return undefined;
     }
 
     getRawValue = (value: Value): RawValue => {

@@ -147,7 +147,7 @@ class ProgramConverter {
                 case "function":
                     codeValue.push(
                         {
-                            selector: [...selector, "functionId"],
+                            selector: [...selector, "id"],
                             type: "function-select",
                             value: value.id,
                             children: this.valueToUI(value.arg, [...selector, "arg"]),
