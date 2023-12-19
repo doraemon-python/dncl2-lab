@@ -9,7 +9,7 @@ const BooleanSelectBlock = ({ value, setValue }: Props) => {
   return (
     <BaseSelectBlock
       className="text-boolean bg-boolean/10"
-      choices={{ "false": { name: "false" }, "true": { name: "true" } }}
+      choices={{ "false": "false", "true": "true" }}
       value={value ? "true" : "false"}
       setValue={setValue}
     />

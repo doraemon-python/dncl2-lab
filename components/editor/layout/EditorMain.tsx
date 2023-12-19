@@ -1,7 +1,7 @@
 "use client"
 
 
-import { Program } from "@/types/program";
+import { DNCL2Program } from "@/types/program";
 import ProgramConverter from "@/functions/programConverter";
 import p from "@/const/program";
 import { useState } from "react";
@@ -12,7 +12,7 @@ import EditorAddCode from "./EditorAddCode";
 
 export const EditorMain = () => {
   const [isSelected, setIsSelected] = useState(false);
-  const [program, setProgram] = useState<Program>(p);
+  const [program, setProgram] = useState<DNCL2Program>(p);
   const code = new ProgramConverter().convert(program);
 
   return (

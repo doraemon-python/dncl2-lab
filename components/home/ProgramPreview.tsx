@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import Editor from "../editor/layout/Editor";
 
-import { Program } from "@/types/program";
+import { DNCL2Program } from "@/types/program";
 import ProgramConverter from "@/functions/programConverter";
 import p from "@/const/program";
 
@@ -19,7 +19,7 @@ const ProgramPreview = ({ title }: Props) => {
   const [scale, setScale] = useState(0);
   //適当になにかEditorに渡しておく
   const [edit, setEdit] = useState(false);
-  const [program, setProgram] = useState<Program>(p);
+  const [program, setProgram] = useState<DNCL2Program>(p);
   const code = new ProgramConverter().convert(program);
 
   useEffect(() => {

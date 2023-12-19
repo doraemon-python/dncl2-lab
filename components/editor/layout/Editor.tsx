@@ -1,11 +1,11 @@
 import { LineWrapper, LineGroup } from "@/components/editor/structure";
-import { Program } from "@/types/program";
+import { DNCL2Program } from "@/types/program";
 import { Code } from "@/types/code";
 
 type Props = {
   code: Code;
-  program: Program;
-  setProgram: (program: Program) => void;
+  program: DNCL2Program;
+  setProgram: (program: DNCL2Program) => void;
   isSelected: boolean;
   setIsSelected: (isSelected: boolean) => void;
 }
@@ -14,7 +14,7 @@ export const Editor = ({ code, program, setProgram, isSelected, setIsSelected }:
   return (
     <div className="flex flex-col gap-4 mb-4 drop-shadow">
       <LineWrapper>
-        <LineGroup codeLines={code} programLines={program} setProgramLines={setProgram} />
+        <LineGroup codeLines={code} program={program} setProgram={setProgram} />
       </LineWrapper>
       <button
         onClick={() => setIsSelected(!isSelected)}

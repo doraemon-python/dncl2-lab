@@ -1,7 +1,7 @@
 import BaseSelectBlock from "./BaseSelectBlock";
 
 type Props = {
-  choices: { [id: string]: { name: string } },
+  choices: { [id: string]: string },
   value: string,
   setValue: (value: string) => void,
   children?: React.ReactNode,

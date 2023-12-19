@@ -15,35 +15,28 @@ export type NestInfo = {
     elifId: string;
 }
 
-export type BaseBlockElem = {
-    type: "variable";
-    value: string;
-} | {
+export type BaseBlockElem<T extends string, V> = {
+    type: T;
     selector: Array<string | number>;
-    type: "number" | "string";
-    value: string;
-};
+    value: V
+}
+export type BaseSelectBlockElem<T extends string, V> = BaseBlockElem<T, V> & {
+    choices: { [id: string]: string }
+}
 
-export type SelectBlockElem = {
-    selector: Array<string | number>;
-    type: "variable-select";
-    value: string;
-    choices: { [id: string]: { name: string } };
-} | {
-    selector: Array<string | number>;
-    type: "function-select";
-    value: string;
-    choices: { [id: string]: { name: string } };
-    children?: Array<BlockElem | TextElem>;
-} | {
-    selector: Array<string | number>;
-    type: "boolean-select";
-    value: boolean;
-};
-export type BlockElem = BaseBlockElem | SelectBlockElem;
+export type WriteBlockElem = (
+    BaseBlockElem<"variable", string> |
+    BaseBlockElem<"number" | "string", string>
+)
+export type SelectBlockElem = (
+    BaseSelectBlockElem<"variable-select", string> |
+    BaseSelectBlockElem<"function-select", string> & { children?: Array<BlockElem | TextElem> } |
+    Omit<BaseSelectBlockElem<"boolean-select", boolean>, "choices">
+)
+
+export type BlockElem = WriteBlockElem | SelectBlockElem;
 
 export type TextElem = {
     type: "plain" | "reserved";
     value: string;
 }
-
