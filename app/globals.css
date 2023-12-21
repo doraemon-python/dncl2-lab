@@ -6,6 +6,10 @@
     outline: none;
 }
 
+::-webkit-scrollbar {
+    display: none;
+}
+
 @layer utilities {
     .bg-1 {
         @apply bg-depth-1 dark:bg-depth-1-dark;

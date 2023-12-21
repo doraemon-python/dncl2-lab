@@ -7,7 +7,7 @@ import p from "@/const/program";
 import { useState } from "react";
 import Editor from "./Editor";
 import EditorActionBar from "./EditorActionBar";
-import EditorAddCode from "./EditorAddCode";
+import AddLineBtns from "../add-line-btns/AddLineBtns";
 
 
 export const EditorMain = () => {
@@ -26,7 +26,7 @@ export const EditorMain = () => {
       />
       <div className="mb-4 h-[2px] bg-gray-300 rounded" />
       <EditorActionBar program={program} />
-      <EditorAddCode isSelected={isSelected} setIsSelected={setIsSelected} />
+      <AddLineBtns isVisible={isSelected} setIsVisible={setIsSelected} />
     </main>
   );
 }
