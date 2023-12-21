@@ -1,13 +1,12 @@
 "use client"
 
-
 import { DNCL2Program } from "@/types/program";
 import ProgramConverter from "@/functions/programConverter";
 import p from "@/const/program";
 import { useState } from "react";
 import Editor from "./Editor";
 import EditorActionBar from "./EditorActionBar";
-import AddLineBtns from "../add-line-btns/AddLineBtns";
+import AddLineBar from "../add-line-bar/AddLineBar";
 
 
 export const EditorMain = () => {
@@ -26,7 +25,12 @@ export const EditorMain = () => {
       />
       <div className="mb-4 h-[2px] bg-gray-300 rounded" />
       <EditorActionBar program={program} />
-      <AddLineBtns isVisible={isSelected} setIsVisible={setIsSelected} />
+      <AddLineBar
+        isVisible={isSelected}
+        setIsVisible={setIsSelected}
+        program={program}
+        setProgram={setProgram}
+      />
     </main>
   );
 }
